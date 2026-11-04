@@ -14,3 +14,5 @@ __pycache__/
 .Rhistory
 .RData
 .Ruserdata
+# Generated predictions
+/output/
