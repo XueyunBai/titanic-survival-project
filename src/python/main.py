@@ -56,7 +56,8 @@ print("\nTraining survival counts:")
 print(train["Survived"].value_counts().sort_index().to_string())
 if "Survived" not in test.columns:
     print(
-        "\nTest accuracy cannot be calculated directly: test.csv does not contain true Survived labels."
+        "\nTest accuracy cannot be calculated directly: "
+        "test.csv does not contain true Survived labels."
     )
 print("\nData loading and basic checks completed.")
 
@@ -65,7 +66,7 @@ print("\nStep 2: Select features")
 numeric_features = ["Pclass", "Age", "SibSp", "Parch", "Fare"]
 categorical_features = ["Sex", "Embarked"]
 features = numeric_features + categorical_features
-# Then check that the selected columns exist in both datasets.
+# Check that the selected columns exist in both datasets.
 for name, dataset in (("train.csv", train), ("test.csv", test)):
     missing_columns = [
         column for column in features if column not in dataset.columns
@@ -78,10 +79,10 @@ X = train[features].copy()
 y = train["Survived"].copy()
 X_test = test[features].copy()
 print(f"Selected features: {features}")
-print("Target: Survived (0 means did not survive, 1 means survived)")
-print("ALso excluded from model: PassengerId, Name, Ticket, Cabin")
+print("Target: Survived (0 = did not survive, 1 = survived)")
+print("Excluded from model: PassengerId, Name, Ticket, Cabin")
 print("No passenger rows have been removed.")
-# Split before fitting any preprocessing steps so that we can avoid data leakage
+# Split before fitting any preprocessing steps.
 print("\n3: Create training and validation subsets")
 X_train, X_valid, y_train, y_valid = train_test_split(
     X,
@@ -92,8 +93,9 @@ X_train, X_valid, y_train, y_valid = train_test_split(
 )
 print(f"Training subset: {len(X_train)} passengers")
 print(f"Validation subset: {len(X_valid)} passengers")
-print("Split: 80% training, 20% validation and random_state=42")
-print("I will handle missing values in the next preprocessing step.")
+print("Split: 80% training, 20% validation; random_state=42")
+print("Stratification preserves approximately the survival proportions.")
+print("Missing values will be handled in the next preprocessing step.")
 
 # Define preprocessing for numerical and categorical features.
 print("\nStep 4: Configure preprocessing")
@@ -115,15 +117,11 @@ preprocessor = ColumnTransformer(
         ("categorical", categorical_pipeline, categorical_features),
     ]
 )
-#for missing values, I will fill them with traning subset medians and then standardize it
 print("Numerical missing values: fill with training-subset medians.")
 print("Numerical features: standardize using training-subset statistics.")
-#same for categorical missing values, I will fill them with training subset modes 
 print("Categorical missing values: fill with training-subset modes.")
-#also will apply one hot encoding for categorical featuers to avoid any nonsense relationship
 print("Categorical features: apply one-hot encoding.")
 print("Unseen categories: encode as all zeros for that feature.")
-#since we cna only train the training set, so to avoid data leackage, I will not fit any validation data
 print("Validation data will not be used to fit preprocessing rules.")
 # Combine preprocessing and logistic regression into one pipeline.
 model = Pipeline(
@@ -131,7 +129,6 @@ model = Pipeline(
         ("preprocessor", preprocessor),
         (
             "classifier",
-            #this time I will use logistic, but for R I will use another model
             LogisticRegression(
                 solver="lbfgs",
                 max_iter=1000,
@@ -161,7 +158,7 @@ for feature, value in zip(numeric_features, numeric_fill_values):
 print("\nLearned categorical fill values:")
 for feature, value in zip(categorical_features, categorical_fill_values):
     print(f"{feature}: {value}")
-# in order to confirm that preprocessing removes missing values.
+# Confirm that preprocessing removes missing values.
 X_train_processed = fitted_preprocessor.transform(X_train)
 X_valid_processed = fitted_preprocessor.transform(X_valid)
 print(f"\nProcessed training shape: {X_train_processed.shape}")
@@ -184,7 +181,7 @@ valid_accuracy = accuracy_score(y_valid, valid_predictions)
 
 print(f"Training-subset accuracy: {train_accuracy:.4f}")
 print(f"Validation accuracy: {valid_accuracy:.4f}")
-print("This prediction rule is that choose the class with the highest probability.")
+print("Prediction rule: choose the class with the highest probability.")
 print("Validation accuracy measures performance on held-out labeled data.")
 print("It is not the accuracy on Kaggle test.csv.")
 
@@ -195,10 +192,11 @@ final_model = clone(model)
 final_model.fit(X, y)
 print(f"Final model fitted on all {len(X)} training passengers.")
 print("Preprocessing rules are now learned from the full training set.")
+print("The previously reported validation accuracy remains unchanged.")
 full_train_predictions = final_model.predict(X)
 full_train_accuracy = accuracy_score(y, full_train_predictions)
 print(f"Full-training-set accuracy: {full_train_accuracy:.4f}")
-print("This is actually a in-sample score, not the independent evaluation.")
+print("This is an in-sample score, not an independent evaluation.")
 # Apply the fitted preprocessing rules and model to test.csv.
 print("\nStep 8: Predict test passengers")
 test_processed = final_model.named_steps["preprocessor"].transform(X_test)
@@ -219,7 +217,6 @@ if len(predictions) != len(test):
 if predictions["Survived"].isna().any():
     raise ValueError("Missing survival predictions were generated.")
 print(f"Generated predictions for {len(predictions)} test passengers.")
-# I will print out first 10 predictions for preview
 print("\nFirst 10 predictions:")
 print(predictions.head(10).to_string(index=False))
 print("\nPredicted survival counts:")
@@ -234,10 +231,11 @@ print(f"\nPredictions saved to: {output_path}")
 
 if "Survived" not in test.columns:
     print(
-        "Kaggle test accuracy: unavailable because test.csv has no true Survived labels."
+        "Kaggle test accuracy: unavailable because test.csv "
+        "has no true Survived labels."
     )
 else:
     test_accuracy = accuracy_score(test["Survived"], test_predictions)
     print(f"Test accuracy: {test_accuracy:.4f}")
 
-print("\nPython version completed successfully.")
+print("\nPython workflow completed successfully.")
