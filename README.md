@@ -5,9 +5,11 @@ This project predicts passenger survival using the Kaggle Titanic dataset. The P
 
 ## 1. Set up the project
 
-Install and start Docker Desktop. Clone this repository, open a terminal in the project root (the folder containing this README), and create the input and output directories:
+Install and start Docker Desktop. Open a terminal in the folder where you want to download the project, then run the commands below.
 
 ```bash
+git clone --branch main https://github.com/XueyunBai/titanic-survival-project.git
+cd titanic-survival-project
 mkdir -p src/data output
 ```
 
@@ -58,3 +60,13 @@ The two workflows use their own validation splits, so the scores describe each r
 `test.csv` has no `Survived` labels, so test accuracy cannot be calculated locally.
 
 Each prediction file has 418 data rows and two columns: `PassengerId` and `Survived`. A prediction of `0` means the passenger did not survive, and `1` means the passenger survived.
+
+### Verify the prediction files
+
+After running both workflows, run this command from the project directory:
+
+```bash
+wc -l output/python_predictions.csv output/r_predictions.csv
+```
+
+Each file should have 419 lines: one header line and 418 passenger predictions.
